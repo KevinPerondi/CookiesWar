@@ -2,14 +2,17 @@
 class Player extends Phaser.Sprite {
     constructor(game, x, y, img, keys) {
         super(game, x, y, img)
-        this.health = config.PLAYER_HEALTH
+        this.fireDelay = 360;
+        this.fireCount = 0;
+        this.playerVelocity = 150;
+        //this.health = config.PLAYER_HEALTH
         this.anchor.setTo(0.5, 0.5)
         //game.physics.arcade.enable(this)//professor
         game.physics.enable(this, Phaser.Physics.ARCADE);//phaser
-        player.body.collideWorldBounds = true;
-        player.body.gravity.y = 1000;
-        player.body.maxVelocity.y = 500;
-        player.body.setSize(20, 32, 5, 16);
+        this.body.collideWorldBounds = true;
+        this.body.gravity.y = 1000;
+        this.body.maxVelocity.y = 500;
+        this.body.setSize(20, 32, 5, 16);
 
         this.cursors = {
             left: game.input.keyboard.addKey(keys.left),
@@ -18,9 +21,6 @@ class Player extends Phaser.Sprite {
             fire: game.input.keyboard.addKey(keys.fire)
         }
     
-        //player.animations.add('left', [0, 1, 2, 3], 10, true);
-        //player.animations.add('turn', [4], 20, true);
-        //player.animations.add('right', [5, 6, 7, 8], 10, true);
     }        
 
     // move e rotaciona, como em Asteroids
@@ -73,45 +73,50 @@ class Player extends Phaser.Sprite {
         }    
     } */
     
-    movePlayer(){
-        player.body.velocity.x = 0;
-        if (cursors.left.isDown){
-            player.body.velocity.x = -150;
-
-            /*if (facing != 'left'){
-                player.animations.play('left');
-                facing = 'left';
-            }*/
-        }
-        else if (cursors.right.isDown){
-            player.body.velocity.x = 150;
-
-            /*if (facing != 'right'){
-                player.animations.play('right');
-                facing = 'right';
-            }*/
+    fireCookies(){
+        if(!this.alive){
+            return;
         }
         else{
-            /*if (facing != 'idle'){
-                player.animations.stop();
-                if (facing == 'left'){
-                    player.frame = 0;
-                }
-                else{
-                    player.frame = 5;
-                }
-                facing = 'idle';
-            }*/
+            if(this.cursors.fire.isDown && (this.fireCount == this.fireDelay)){
+                var bullet = new Bullet(game, this.x, this.y, 'shot')
+                bullet.kill();
+                //atira e reseta o contador
+                this.fireCount = 0;
+                //lembrar de voltar pro sprite sem bala!
+                console.log("MANDEI BIXKOITO");
+            }
+            else{
+                return;
+            }
+        }
+    }
+
+    movePlayer(){
+        this.body.velocity.x = 0;
+        if (this.cursors.left.isDown){
+            this.body.velocity.x = -this.playerVelocity;
+        }
+        else if (this.cursors.right.isDown){
+            this.body.velocity.x = this.playerVelocity;
         }
         
-        if (cursors.jump.isDown && player.body.onFloor() && game.time.now > jumpTimer){
-            player.body.velocity.y = -500;
+        if (this.cursors.jump.isDown && this.body.onFloor() && game.time.now > jumpTimer){
+            this.body.velocity.y = -500;
             jumpTimer = game.time.now + 750;
         }
     }
 
+    checkFireDelay(){
+        if (this.fireCount < this.fireDelay){
+            this.fireCount++;
+        }
+    }
+
     update() {
-        this.movePlayer();        
+        this.checkFireDelay();
+        this.movePlayer();
+        this.fireCookies();      
         //this.moveAndTurn()
         //this.fireBullet()
     }

@@ -73,7 +73,7 @@ function createMap() {
 function preload() {
     game.load.image('background','assets/background1.png')
     game.load.image('p1','assets/airplane1.png')
-
+    game.load.image('shot', 'assets/shot.png')
     /*game.load.image('saw', 'assets/saw.png')
     game.load.image('sky', 'assets/sky.png')
     game.load.image('plane1', 'assets/airplane1.png')
@@ -96,13 +96,13 @@ function create(){
     bg.scale.x = game.width/bg.width;
     bg.scale.y = game.height/bg.height;
 
-    player1 = new Player(game, game.width*2/9, game.height/2, 'p1', {   
+    player = new Player(game, game.width*2/9, game.height/2, 'p1', {   
             left: Phaser.Keyboard.LEFT,
             right: Phaser.Keyboard.RIGHT,
-            jump: Phaser.Keyboard.SPACEBAR,
-            fire: Phaser.Keyboard.L
+            jump: Phaser.Keyboard.UP,
+            fire: Phaser.Keyboard.SPACEBAR
         })
-    game.add.existing(player1);
+    game.add.existing(player);
 
 }
 
