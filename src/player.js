@@ -1,18 +1,21 @@
 
 class Player extends Phaser.Sprite {
-    constructor(game, x, y, img, keys) {
+    constructor(game, x, y, img, pType,keys) {
         super(game, x, y, img)
+        this.jumpTimer = 0;
+        this.fireDelayMax = 60;
         this.fireDelay = 360;
-        this.fireCount = 0;
+        this.fireCount = 360;
         this.playerVelocity = 150;
-        //this.health = config.PLAYER_HEALTH
+        this.playerVelocityMax = 400;
+        this.health = 20;
         this.anchor.setTo(0.5, 0.5)
-        //game.physics.arcade.enable(this)//professor
-        game.physics.enable(this, Phaser.Physics.ARCADE);//phaser
+        game.physics.enable(this, Phaser.Physics.ARCADE);
         this.body.collideWorldBounds = true;
         this.body.gravity.y = 1000;
         this.body.maxVelocity.y = 500;
         this.body.setSize(20, 32, 5, 16);
+        this.pType = pType;
 
         this.cursors = {
             left: game.input.keyboard.addKey(keys.left),
@@ -20,75 +23,62 @@ class Player extends Phaser.Sprite {
             jump: game.input.keyboard.addKey(keys.jump),
             fire: game.input.keyboard.addKey(keys.fire)
         }
-    
+
+        this.bullet;
+        this.specialBullet;
+
+        game.add.existing(this)
     }        
-
-    // move e rotaciona, como em Asteroids
-    /*moveAndTurn() {
-        // define aceleracao pela rotacao (radianos) do sprite
-        if (this.cursors.up.isDown) {
-            game.physics.arcade.accelerationFromRotation(
-                this.rotation, config.PLAYER_ACCELERATION, this.body.acceleration
-            )
-        } else {
-            // precisa anular campo "acceleration" caso nao pressione UP
-            this.body.acceleration.set(0)
-        }
-
-        // rotaciona
-        if (this.cursors.left.isDown) {
-            this.body.angularVelocity = -config.PLAYER_TURN_VELOCITY
-        } else
-        if (this.cursors.right.isDown) {
-            this.body.angularVelocity = config.PLAYER_TURN_VELOCITY
-        } else {
-            this.body.angularVelocity = 0
-        }
-
-        // atravessa bordas da tela (usando phaser built-in)
-        game.world.wrap(this, 0, true)
-    }   */
     
-    /*fireBullet() {
-        if (!this.alive)
+    playerAlive(){
+        if(this.health <= 0){
+            this.kill();
+        }
+    }
+
+    damageTaken(damage){
+        this.health = this.health-damage;
+        this.resetPlayer();
+    }
+
+    speedReset(){
+        this.playerVelocity = 150;
+    }
+
+    increasesSpeed(){
+        if(this.playerVelocity == this.playerVelocityMax){
             return;
-    
-        if (this.cursors.fire.isDown) {
-            if (this.game.time.time > this.nextFire) {
-                var bullet = this.bullets.getFirstExists(false)
-                if (bullet) {
-                    bullet.reset(this.x, this.y)
-                    bullet.lifespan = config.BULLET_LIFE_SPAN
-                    bullet.rotation = this.rotation
-                    bullet.body.bounce.setTo(1,1)
-                    bullet.body.friction.setTo(0,0)
-                    game.physics.arcade.velocityFromRotation(
-                        bullet.rotation + game.rnd.realInRange(-config.BULLET_ANGLE_ERROR, config.BULLET_ANGLE_ERROR), 
-                        config.BULLET_VELOCITY, bullet.body.velocity
-                    )
-                    // fire rate
-                    this.nextFire = this.game.time.time + config.BULLET_FIRE_RATE
-                }
-            }
-        }    
-    } */
-    
+        }else{
+            this.playerVelocity = this.playerVelocity+50;
+        }
+    }
+
+    fireDelayReset(){
+        this.fireDelay = 360;
+        this.fireCount = this.fireDelay;
+    }
+
+    increasesFireDelay(){
+        if (this.fireDelay == this.fireDelayMax){
+            return;
+        }else{
+            this.fireDelay = this.fireDelay-60;
+            this.fireCount = this.fireDelay;
+        }
+    }
+
+    resetPlayer(){
+        this.speedReset();
+        this.fireDelayReset();
+    }
+
     fireCookies(){
-        if(!this.alive){
-            return;
+        if(this.cursors.fire.isDown && (this.fireCount == this.fireDelay)){
+            this.bullet = new Bullet(game, this.x, this.y, 'shot', this.pType);
+            this.fireCount = 0;
         }
         else{
-            if(this.cursors.fire.isDown && (this.fireCount == this.fireDelay)){
-                var bullet = new Bullet(game, this.x, this.y, 'shot')
-                bullet.kill();
-                //atira e reseta o contador
-                this.fireCount = 0;
-                //lembrar de voltar pro sprite sem bala!
-                console.log("MANDEI BIXKOITO");
-            }
-            else{
-                return;
-            }
+            return;
         }
     }
 
@@ -101,9 +91,9 @@ class Player extends Phaser.Sprite {
             this.body.velocity.x = this.playerVelocity;
         }
         
-        if (this.cursors.jump.isDown && this.body.onFloor() && game.time.now > jumpTimer){
+        if (this.cursors.jump.isDown && this.body.touching.down && game.time.now > this.jumpTimer){
             this.body.velocity.y = -500;
-            jumpTimer = game.time.now + 750;
+            this.jumpTimer = game.time.now + 750;
         }
     }
 
@@ -114,10 +104,15 @@ class Player extends Phaser.Sprite {
     }
 
     update() {
-        this.checkFireDelay();
-        this.movePlayer();
-        this.fireCookies();      
-        //this.moveAndTurn()
+        if (this.alive){
+            this.playerAlive();
+            this.movePlayer();
+            this.fireCookies();
+            this.checkFireDelay();
+        }
+        else{
+            return;
+        }
         //this.fireBullet()
     }
 }
