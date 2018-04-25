@@ -3,13 +3,16 @@ class Milk extends Phaser.Sprite{
         super(game, x, y, img)
         game.physics.enable(this, Phaser.Physics.ARCADE);
         this.body.collideWorldBounds = true;
-        //alterando o tamanho da imagem
-        this.damage = 1;
-        this.scale.setTo(0.5,0.5);        
+        this.scale.setTo(0.12,0.12);
+        this.anchor.setTo(0.5,0.5);
+        this.damage = 1;       
         game.add.existing(this)
     }
 
     killMilk(){
+        this.loadTexture('splash')
+        this.scale.setTo(0.4,0.4);
+        this.anchor.setTo(0.5,0.5);
         this.kill();
     }
 }
