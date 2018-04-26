@@ -20,6 +20,9 @@ var player2Score = 0;
 
 var backgroundCount = 1;
 
+var winCount = 0;
+var haveWinner = false;
+
 var level = 1;
 var showLevelDelay = 180;
 var showLevelCount = 0;
@@ -35,8 +38,8 @@ var map;
 var mapsCount = 0;
 var maps = ['map1','map2','map3'];
 
-var sugarSpawnDelay = 600;
-var yeastSpawnDelay = 900;
+var sugarSpawnDelay = 400;
+var yeastSpawnDelay = 700;
 var milkSpawnDelay = 120;
 
 var sugarDelay = 0;
@@ -208,7 +211,7 @@ function createPlayers(){
             fire: Phaser.Keyboard.SPACEBAR
         });
 
-    player2 = new Player(game, game.width*7/9, game.height/7, 'cookie', 't2', {   
+    player2 = new Player(game, game.width*7/9, game.height/2, 'cookie', 't2', {   
             left: Phaser.Keyboard.LEFT,
             right: Phaser.Keyboard.RIGHT,
             jump: Phaser.Keyboard.UP,
@@ -248,12 +251,24 @@ function create(){
         text2: createHealthText(game.width*8/9, 50, 'PLAYER 2: 20'),
         score1: createScoreText(game.width*1/9, 80, 'MD3: '+player1Score),
         score2: createScoreText(game.width*8/9, 80, 'MD3: '+player2Score),
+        winner1: createWinnerText(game.width/2, game.height/2, 'Player 1 WIN!'),
+        winner2: createWinnerText(game.width/2, game.height/2, 'Player 2 WIN!'),
         textLevel: createLevelText()
     };
     updateHud();
 
     var fps = new FramesPerSecond(game, game.width/2, 50);
     game.add.existing(fps);
+}
+
+function createWinnerText(x, y, text) {
+    var style = {font: 'bold 72px Arial', fill: 'white'}
+    var text = game.add.text(x, y, text, style)
+    text.stroke = '#000000';
+    text.strokeThickness = 2;
+    text.anchor.setTo(0.5, 0.5)
+    text.visible = false;
+    return text
 }
 
 function createHealthText(x, y, text) {
@@ -447,18 +462,43 @@ function checkDeadYeast(){
 }
 
 function callNextStage(){
+    if (haveWinner){
+        mapsCount = 0;
+        mapsCount = 0;
+        backgroundCount = 1;
+        level = 1;
+        milkSpawnDelay = 160;
+    }
     game.state.restart();
     showLevelCount = 0;
     milkSpawnDelay = milkSpawnDelay-40;
     milkDelay = 0;
+    sugarDelay = 0;
+    yeastDelay = 0;
 }
 
-function update(){
-    if(player1Score == 2){
 
-    }else if (player2Score == 2){
-        
-    }else{
+
+function update(){
+    if (haveWinner && winCount < 300){
+        if(player1Score == 2){
+            hud.winner1.visible = true;
+        }else if (player2Score == 2){
+            hud.winner2.visible = true;
+        }else{
+
+        }
+        winCount++;
+    }
+    /*if(player1Score == 2 && winCount < 600){
+        //game.paused = true;
+        winCount++;
+        //hud.winner1.visible = true;
+    }else if (player2Score == 2 && winCount < 600){
+        //game.paused = true;
+        winCount++;
+        //hud.winner2.visible = true;
+    }else{*/
         checkDeadMilks();
         checkDeadSugars();
         checkDeadYeast();
@@ -481,7 +521,12 @@ function update(){
             player2Score++;
             callNextStage();
         }
-    }
+
+        //checkWinner();
+        if(!haveWinner){
+            callNextStage();
+        }
+   // }
 }
 
 function updateHud() {
