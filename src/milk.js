@@ -6,7 +6,7 @@ class Milk extends Phaser.Sprite{
         this.scale.setTo(0.12,0.12);
         this.anchor.setTo(0.5,0.5);
         this.damage = 1;       
-        game.add.existing(this)
+        game.add.existing(this);
     }
 
     killMilk(){

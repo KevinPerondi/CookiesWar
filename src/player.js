@@ -133,6 +133,11 @@ class Player extends Phaser.Sprite {
         }
     }
 
+    destroyPlayer(){
+        this.bullets.destroy();
+        this.destroy();
+    }
+
     update() {
         if (this.alive){
             this.playerAlive();

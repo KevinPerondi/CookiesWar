@@ -18,6 +18,12 @@ config.RES_Y = 704;
 var player1Score = 0;
 var player2Score = 0;
 
+var backgroundCount = 1;
+
+var level = 1;
+var showLevelDelay = 180;
+var showLevelCount = 0;
+
 var player;
 var player2;
 var cursors;
@@ -172,7 +178,9 @@ function createMap() {
 }
 
 function preload() {
-    game.load.image('background','assets/back1.png');
+    game.load.image('background1','assets/back1.png');
+    game.load.image('background2','assets/back2.png');
+    game.load.image('background3','assets/back1.png');
     game.load.image('cookie','assets/cookie.png');
     game.load.image('shot', 'assets/shot.png');
     game.load.image('specialShot', 'assets/specialShot.png');
@@ -192,19 +200,7 @@ function preload() {
     game.load.text('map3', 'assets/map3.txt');
 }
 
-function create(){
-
-    game.physics.startSystem(Phaser.Physics.ARCADE);
-    game.physics.arcade.gravity.y = 300;
-
-    var backgroundWidth = game.cache.getImage('background').width;
-    var backgroundHeight = game.cache.getImage('background').height;
-    bg = game.add.tileSprite(0, 0, backgroundWidth, backgroundHeight, 'background');
-    bg.scale.x = game.width/bg.width;
-    bg.scale.y = game.height/bg.height;
-
-    createMap();
-
+function createPlayers(){
     player = new Player(game, game.width*2/9, game.height/2, 'cookie', 't1', {   
             left: Phaser.Keyboard.A,
             right: Phaser.Keyboard.D,
@@ -218,10 +214,31 @@ function create(){
             jump: Phaser.Keyboard.UP,
             fire: Phaser.Keyboard.ENTER
         });
+}
+
+function createBackground(){
+    var backgroundWidth = game.cache.getImage('background'+backgroundCount).width;
+    var backgroundHeight = game.cache.getImage('background'+backgroundCount).height;
+    bg = game.add.tileSprite(0, 0, backgroundWidth, backgroundHeight, 'background'+backgroundCount);
+    bg.scale.x = game.width/bg.width;
+    bg.scale.y = game.height/bg.height;
+    backgroundCount++;
+}
+
+function create(){
+
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.physics.arcade.gravity.y = 300;
+
+    createBackground();
+
+    createMap();
 
     sugars = game.add.group();
     yeasts = game.add.group();
     milks = game.add.group();
+
+    createPlayers();
     
     var fullScreenButton = game.input.keyboard.addKey(Phaser.Keyboard.ONE);
     fullScreenButton.onDown.add(toggleFullScreen);
@@ -229,11 +246,13 @@ function create(){
     hud = {
         text1: createHealthText(game.width*1/9, 50, 'PLAYER 1: 20'),
         text2: createHealthText(game.width*8/9, 50, 'PLAYER 2: 20'),
-        fps: createHealthText(game.width*6/9, 50, 'FPS'),
+        score1: createScoreText(game.width*1/9, 80, 'MD3: '+player1Score),
+        score2: createScoreText(game.width*8/9, 80, 'MD3: '+player2Score),
+        textLevel: createLevelText()
     };
     updateHud();
 
-    var fps = new FramesPerSecond(game, game.width*3/9, 50);
+    var fps = new FramesPerSecond(game, game.width/2, 50);
     game.add.existing(fps);
 }
 
@@ -244,6 +263,29 @@ function createHealthText(x, y, text) {
     text.stroke = '#000000';
     text.strokeThickness = 2;
     text.anchor.setTo(0.5, 0.5)
+    return text
+}
+
+function createScoreText(x, y, text) {
+    var style = {font: 'bold 16px Arial', fill: 'white'}
+    var text = game.add.text(x, y, text, style)
+    //text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
+    text.stroke = '#000000';
+    text.strokeThickness = 2;
+    text.anchor.setTo(0.5, 0.5)
+    return text
+}
+
+function createLevelText(x, y) {
+    var levelNumber = 'Level '+level;
+    var style = {font: 'bold 48px Arial', fill: 'white'}
+    var text = game.add.text(game.width/2, game.height/2, levelNumber, style)
+    //text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
+    text.stroke = '#000000';
+    text.strokeThickness = 2;
+    text.anchor.setTo(0.5, 0.5)
+    text.visible = true;
+    level++;
     return text
 }
 
@@ -337,20 +379,20 @@ function playerCollisions(){
     game.physics.arcade.collide(player2, map, playerMapCollide);
 
     //jogador colidindo com os colecionaveis
-    game.physics.arcade.collide(player, sugars, playerGetSugar);
-    game.physics.arcade.collide(player, yeasts, playerGetYeast);
-    game.physics.arcade.collide(player2, sugars, playerGetSugar);
-    game.physics.arcade.collide(player2, yeasts, playerGetYeast);
+    game.physics.arcade.overlap(player, sugars, playerGetSugar);
+    game.physics.arcade.overlap(player, yeasts, playerGetYeast);
+    game.physics.arcade.overlap(player2, sugars, playerGetSugar);
+    game.physics.arcade.overlap(player2, yeasts, playerGetYeast);
 
     //jogador colidindo com a gota de leite
-    game.physics.arcade.collide(player, milks, playerHitByMilk);
-    game.physics.arcade.collide(player2, milks, playerHitByMilk);
+    game.physics.arcade.overlap(player, milks, playerHitByMilk);
+    game.physics.arcade.overlap(player2, milks, playerHitByMilk);
 }
 
 function bulletsCollisions(){
     //bala colidindo entre os jogadores
-    game.physics.arcade.collide(player,player2.bullets,playerHitBySimpleBullet);
-    game.physics.arcade.collide(player2,player.bullets,playerHitBySimpleBullet);
+    game.physics.arcade.overlap(player,player2.bullets,playerHitBySimpleBullet);
+    game.physics.arcade.overlap(player2,player.bullets,playerHitBySimpleBullet);
 
     //bala colidindo com o mapa
     game.physics.arcade.overlap(player.bullets,map,bulletMapCollide);
@@ -368,8 +410,6 @@ function bulletsCollisions(){
     game.physics.arcade.collide(player2.bullets, yeasts, bulletHitYeast);
 }
 
-
-
 function checkCollisions(){
     //gota de leite colidindo com o mapa
     game.physics.arcade.collide(milks, map, gameKillMilk);
@@ -382,34 +422,89 @@ function checkCollisions(){
 
 }
 
+function checkDeadMilks(){
+    milks.forEach(function(milk){
+        if(!milk.alive){
+            milk.destroy();
+        }
+    });
+}
+
+function checkDeadSugars(){
+    sugars.forEach(function(sugar){
+        if(!sugar.alive){
+            sugar.destroy();
+        }
+    });
+}
+
+function checkDeadYeast(){
+    yeasts.forEach(function(yeast){
+        if(!yeast.alive){
+            yeast.destroy();
+        }
+    });
+}
+
+function callNextStage(){
+    game.state.restart();
+    showLevelCount = 0;
+    milkSpawnDelay = milkSpawnDelay-40;
+    milkDelay = 0;
+}
+
 function update(){
+    if(player1Score == 2){
 
-    if(player.alive && !player2.alive){
-        player1Score++;
-    }else if (player2.alive && !player.alive){
-        player2Score++;
+    }else if (player2Score == 2){
+        
+    }else{
+        checkDeadMilks();
+        checkDeadSugars();
+        checkDeadYeast();
+        playerCollisions();
+        bulletsCollisions();
+        checkCollisions();
+        updateHud();
+        createMilk();
+        createSugar();
+        createYeast();
+
+        if(player.alive && !player2.alive){
+            player1Score++;
+            callNextStage();
+        }else if (player2.alive && !player.alive){
+            player2Score++;
+            callNextStage();
+        }else if (!player.alive && !player2.alive){
+            player1Score++;
+            player2Score++;
+            callNextStage();
+        }
     }
-
-    playerCollisions();
-    bulletsCollisions();
-    checkCollisions();
-    hud.fps.text = `FPS ${game.time.fps}`
-    updateHud();
-    createMilk();
-    createSugar();
-    createYeast();
 }
 
 function updateHud() {
     hud.text1.text = 'PLAYER 1: '+ player.health
     hud.text2.text = 'PLAYER 2: ' + player2.health
+    hud.score1.text = 'MD3: '+player1Score;
+    hud.score2.text = 'MD3: '+player2Score;
+    if (hud.textLevel.visible == false){
+        return;
+    }
+    else if (showLevelCount == showLevelDelay){
+        hud.textLevel.visible = false;
+    }else{
+        showLevelCount++;
+    }
+
 }
 
 function render(){
-    /*game.debug.body(player);
+    game.debug.body(player);
     game.debug.body(player2);
     maps.forEach(function(obj){game.debug.body(obj)});
     milks.forEach(function(obj){game.debug.body(obj)});
     sugars.forEach(function(obj){game.debug.body(obj)});
-    yeasts.forEach(function(obj){game.debug.body(obj)});*/
+    yeasts.forEach(function(obj){game.debug.body(obj)});
 }
