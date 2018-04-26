@@ -3,20 +3,19 @@ class Player extends Phaser.Sprite {
     constructor(game, x, y, img, pType,keys) {
         super(game, x, y, img)
         this.jumpTimer = 0;
-        this.fireDelayMax = 60;
-        this.fireDelay = 360;
-        this.fireCount = 360;
-        this.playerVelocity = 150;
-        this.playerVelocityMax = 400;
+        this.fireDelayMax = 30;
+        this.fireDelay = 180;
+        this.fireCount = 180;
+        this.velocity = 150;
         this.health = 10;
         this.angleSpeed = 3;
         this.scale.setTo(0.1,0.1);
         this.anchor.setTo(0.5, 0.5)
         game.physics.enable(this, Phaser.Physics.ARCADE);
-        //this.body.isCircle = true;
         this.body.collideWorldBounds = true;
         this.body.gravity.y = 1000;
         this.body.maxVelocity.y = 500;
+        this.body.maxVelocity.x = 400;
         this.pType = pType;
 
         this.cursors = {
@@ -48,19 +47,19 @@ class Player extends Phaser.Sprite {
     }
 
     speedReset(){
-        this.playerVelocity = 150;
+        this.velocity = 150;
     }
 
     increasesSpeed(){
-        if(this.playerVelocity == this.playerVelocityMax){
-            this.playerVelocity = this.playerVelocityMax;
+        if(this.playerVelocity == this.body.maxVelocity.x){
+            this.velocity = this.body.maxVelocity.x;
         }else{
-            this.playerVelocity = this.playerVelocity+50;
+            this.velocity = this.velocity+50;
         }
     }
 
     fireDelayReset(){
-        this.fireDelay = 360;
+        this.fireDelay = 180;
         this.fireCount = this.fireDelay;
     }
 
@@ -68,7 +67,7 @@ class Player extends Phaser.Sprite {
         if (this.fireDelay == this.fireDelayMax){
             this.fireDelay = this.fireDelayMax;
         }else{
-            this.fireDelay = this.fireDelay-60;
+            this.fireDelay = this.fireDelay-30;
             this.fireCount = this.fireDelay;
         }
     }
@@ -94,31 +93,31 @@ class Player extends Phaser.Sprite {
             this.angleSpeed = 5;
         }
         else if(this.playerVelocity = 200){
-            this.angleSpeed = 7;
+            this.angleSpeed = 40;
         }
         else if(this.playerVelocity = 250){
-            this.angleSpeed = 9;
+            this.angleSpeed = 60;
         }
         else if(this.playerVelocity = 300){
-            this.angleSpeed = 11;
+            this.angleSpeed = 80;
         }
         else if(this.playerVelocity = 350){
-            this.angleSpeed = 13;
+            this.angleSpeed = 100;
         }
         else if(this.playerVelocity = 400){
-            this.angleSpeed = 15;
+            this.angleSpeed = 120;
         }
     }
 
     movePlayer(){
         this.body.velocity.x = 0;
         if (this.cursors.left.isDown){
+            this.body.velocity.x = -this.velocity;
             this.angle -= this.angleSpeed;
-            this.body.velocity.x = -this.playerVelocity;
         }
         else if (this.cursors.right.isDown){
+            this.body.velocity.x = this.velocity;
             this.angle += this.angleSpeed;
-            this.body.velocity.x = this.playerVelocity;
         }
         
         if (this.cursors.jump.isDown && this.body.touching.down && game.time.now > this.jumpTimer){
@@ -149,6 +148,5 @@ class Player extends Phaser.Sprite {
         else{
             return;
         }
-        //this.fireBullet()
     }
 }

@@ -21,13 +21,16 @@ var player2Score = 0;
 var backgroundCount = 1;
 
 var winCount = 0;
-var haveWinner = false;
+var levelWinner = false;
+var gameWinner = false;
 
 var level = 1;
 var showLevelDelay = 180;
 var showLevelCount = 0;
 
-var player;
+var restartGame;
+
+var player1;
 var player2;
 var cursors;
 var bg;
@@ -40,7 +43,7 @@ var maps = ['map1','map2','map3'];
 
 var sugarSpawnDelay = 400;
 var yeastSpawnDelay = 700;
-var milkSpawnDelay = 120;
+var milkSpawnDelay = 80;
 
 var sugarDelay = 0;
 var yeastDelay = 0;
@@ -49,6 +52,9 @@ var milkDelay = 0;
 var sugars;
 var yeasts;
 var milks;
+
+var winCount = 0;
+var winDelay = 300;
 
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
     'game-container',
@@ -183,7 +189,7 @@ function createMap() {
 function preload() {
     game.load.image('background1','assets/back1.png');
     game.load.image('background2','assets/back2.png');
-    game.load.image('background3','assets/back1.png');
+    game.load.image('background3','assets/back3.png');
     game.load.image('cookie','assets/cookie.png');
     game.load.image('shot', 'assets/shot.png');
     game.load.image('specialShot', 'assets/specialShot.png');
@@ -204,7 +210,7 @@ function preload() {
 }
 
 function createPlayers(){
-    player = new Player(game, game.width*2/9, game.height/2, 'cookie', 't1', {   
+    player1 = new Player(game, game.width*2/9, game.height/2, 'cookie', 't1', {   
             left: Phaser.Keyboard.A,
             right: Phaser.Keyboard.D,
             jump: Phaser.Keyboard.W,
@@ -247,18 +253,44 @@ function create(){
     fullScreenButton.onDown.add(toggleFullScreen);
 
     hud = {
-        text1: createHealthText(game.width*1/9, 50, 'PLAYER 1: 20'),
-        text2: createHealthText(game.width*8/9, 50, 'PLAYER 2: 20'),
-        score1: createScoreText(game.width*1/9, 80, 'MD3: '+player1Score),
-        score2: createScoreText(game.width*8/9, 80, 'MD3: '+player2Score),
+        text1: createHealthText(game.width*1/9, 50, 'HEALTH: 20'),
+        text2: createHealthText(game.width*8/9, 50, 'HEALTH: 20'),
         winner1: createWinnerText(game.width/2, game.height/2, 'Player 1 WIN!'),
         winner2: createWinnerText(game.width/2, game.height/2, 'Player 2 WIN!'),
+        speed1: createSpeedText(game.width*1/9, 70, 'SPEED: '+player1.velocity),
+        speed2: createSpeedText(game.width*8/9, 70, 'SPEED: '+player2.velocity),
+        fire1: createDelayText(game.width*1/9, 90, 'DELAY: '+player1.fireDelay),
+        fire2: createDelayText(game.width*8/9, 90, 'DELAY: '+player2.fireDelay),
+        score1: createScoreText(game.width*1/9, 110, 'MD3: '+player1Score),
+        score2: createScoreText(game.width*8/9, 110, 'MD3: '+player2Score),
         textLevel: createLevelText()
     };
     updateHud();
 
     var fps = new FramesPerSecond(game, game.width/2, 50);
     game.add.existing(fps);
+
+    restartGame = Phaser.Keyboard.R;
+}
+
+function createDelayText(x, y, text) {
+    var style = {font: 'bold 16px Arial', fill: 'orange'}
+    var text = game.add.text(x, y, text, style)
+    text.stroke = '#000000';
+    text.strokeThickness = 2;
+    text.anchor.setTo(0.5, 0.5)
+    text.visible = true;
+    return text
+}
+
+function createSpeedText(x, y, text) {
+    var style = {font: 'bold 16px Arial', fill: 'grey'}
+    var text = game.add.text(x, y, text, style)
+    text.stroke = '#111111';
+    text.strokeThickness = 2;
+    text.anchor.setTo(0.5, 0.5)
+    text.visible = true;
+    return text
 }
 
 function createWinnerText(x, y, text) {
@@ -272,7 +304,7 @@ function createWinnerText(x, y, text) {
 }
 
 function createHealthText(x, y, text) {
-    var style = {font: 'bold 16px Arial', fill: 'white'}
+    var style = {font: 'bold 16px Arial', fill: 'red'}
     var text = game.add.text(x, y, text, style)
     //text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
     text.stroke = '#000000';
@@ -282,7 +314,7 @@ function createHealthText(x, y, text) {
 }
 
 function createScoreText(x, y, text) {
-    var style = {font: 'bold 16px Arial', fill: 'white'}
+    var style = {font: 'bold 16px Arial', fill: 'yellow'}
     var text = game.add.text(x, y, text, style)
     //text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
     text.stroke = '#000000';
@@ -390,38 +422,38 @@ function bulletHitYeast(bullet, yeast){
 
 function playerCollisions(){
     //jogador colidindo com o mapa
-    game.physics.arcade.collide(player, map, playerMapCollide);
+    game.physics.arcade.collide(player1, map, playerMapCollide);
     game.physics.arcade.collide(player2, map, playerMapCollide);
 
     //jogador colidindo com os colecionaveis
-    game.physics.arcade.overlap(player, sugars, playerGetSugar);
-    game.physics.arcade.overlap(player, yeasts, playerGetYeast);
+    game.physics.arcade.overlap(player1, sugars, playerGetSugar);
+    game.physics.arcade.overlap(player1, yeasts, playerGetYeast);
     game.physics.arcade.overlap(player2, sugars, playerGetSugar);
     game.physics.arcade.overlap(player2, yeasts, playerGetYeast);
 
     //jogador colidindo com a gota de leite
-    game.physics.arcade.overlap(player, milks, playerHitByMilk);
+    game.physics.arcade.overlap(player1, milks, playerHitByMilk);
     game.physics.arcade.overlap(player2, milks, playerHitByMilk);
 }
 
 function bulletsCollisions(){
     //bala colidindo entre os jogadores
-    game.physics.arcade.overlap(player,player2.bullets,playerHitBySimpleBullet);
-    game.physics.arcade.overlap(player2,player.bullets,playerHitBySimpleBullet);
+    game.physics.arcade.overlap(player1,player2.bullets,playerHitBySimpleBullet);
+    game.physics.arcade.overlap(player2,player1.bullets,playerHitBySimpleBullet);
 
     //bala colidindo com o mapa
-    game.physics.arcade.overlap(player.bullets,map,bulletMapCollide);
+    game.physics.arcade.overlap(player1.bullets,map,bulletMapCollide);
     game.physics.arcade.overlap(player2.bullets,map,bulletMapCollide);
 
     //bala colidindo com a gota de leite
-    game.physics.arcade.overlap(player.bullets, milks, bulletHitMilk);
+    game.physics.arcade.overlap(player1.bullets, milks, bulletHitMilk);
     game.physics.arcade.overlap(player2.bullets, milks, bulletHitMilk);
 
     //bala colidindo com os colecionaveis
-    game.physics.arcade.collide(player.bullets, sugars, bulletHitSugar);
+    game.physics.arcade.collide(player1.bullets, sugars, bulletHitSugar);
     game.physics.arcade.collide(player2.bullets, sugars, bulletHitSugar);
 
-    game.physics.arcade.collide(player.bullets, yeasts, bulletHitYeast);
+    game.physics.arcade.collide(player1.bullets, yeasts, bulletHitYeast);
     game.physics.arcade.collide(player2.bullets, yeasts, bulletHitYeast);
 }
 
@@ -461,47 +493,93 @@ function checkDeadYeast(){
     });
 }
 
+function checkDeadPlayer(){
+    if (!player1.alive){
+        player1.destroy();
+    }else if (!player2.alive){
+        player2.destroy();
+    }
+    else if (!player1.alive && !player2.alive){
+        player1.destroy();
+        player2.destroy();
+    } 
+}
+
 function callNextStage(){
-    if (haveWinner){
-        mapsCount = 0;
+    if (gameWinner){
         mapsCount = 0;
         backgroundCount = 1;
         level = 1;
-        milkSpawnDelay = 160;
+        gameWinner = false;
+        levelWinner = false;
+        milkSpawnDelay = 80;
+        winCount = 0;
+        showLevelCount = 0;
+        milkDelay = 0;
+        sugarDelay = 0;
+        yeastDelay = 0;
+        player1Score = 0;
+        player2Score = 0;
+        game.state.restart();
+    }else{
+        game.state.restart();
+        showLevelCount = 0;
+        milkSpawnDelay = milkSpawnDelay-30;
+        milkDelay = 0;
+        sugarDelay = 0;
+        yeastDelay = 0;
     }
-    game.state.restart();
-    showLevelCount = 0;
-    milkSpawnDelay = milkSpawnDelay-40;
-    milkDelay = 0;
-    sugarDelay = 0;
-    yeastDelay = 0;
 }
 
+function checkGameWinner(){
+    if(player1Score == 2 && player1Score > player2Score){
+        gameWinner = true;
+    }else if (player2Score == 2 && player2Score > player1Score){
+        gameWinner = true;
+    }
+}
 
+function callChampion(){
+    if(player1Score == 2 && player1Score > player2Score){
+        hud.winner1.visible = true;
+    }else if (player2Score == 2 && player2Score > player1Score){
+        hud.winner2.visible = true;
+    } 
+}
+
+function moveBackground(){
+    //movendo o fundo dos level 2 e 3
+    if(backgroundCount == 3){
+        bg.tilePosition.x += 0.5;
+    }else if(backgroundCount == 4){
+        bg.tilePosition.x += 0.5;
+    }
+}
 
 function update(){
-    if (haveWinner && winCount < 300){
-        if(player1Score == 2){
-            hud.winner1.visible = true;
-        }else if (player2Score == 2){
-            hud.winner2.visible = true;
-        }else{
 
-        }
-        winCount++;
-    }
-    /*if(player1Score == 2 && winCount < 600){
-        //game.paused = true;
-        winCount++;
-        //hud.winner1.visible = true;
-    }else if (player2Score == 2 && winCount < 600){
-        //game.paused = true;
-        winCount++;
-        //hud.winner2.visible = true;
-    }else{*/
+    if (gameWinner){
+        //moveBackground();
         checkDeadMilks();
         checkDeadSugars();
         checkDeadYeast();
+        checkDeadPlayer();
+        playerCollisions();
+        bulletsCollisions();
+        checkCollisions();
+        updateHud();
+        callChampion();
+        if(winCount == winDelay){
+            callNextStage();
+        }else{
+            winCount++;
+        }
+    }else{
+        //moveBackground();
+        checkDeadMilks();
+        checkDeadSugars();
+        checkDeadYeast();
+        checkDeadPlayer();
         playerCollisions();
         bulletsCollisions();
         checkCollisions();
@@ -510,30 +588,37 @@ function update(){
         createSugar();
         createYeast();
 
-        if(player.alive && !player2.alive){
+        if(player1.alive && !player2.alive){
             player1Score++;
-            callNextStage();
-        }else if (player2.alive && !player.alive){
+            levelWinner = true;
+        }else if (player2.alive && !player1.alive){
             player2Score++;
-            callNextStage();
-        }else if (!player.alive && !player2.alive){
+            levelWinner = true;
+        }else if (!player1.alive && !player2.alive){
             player1Score++;
             player2Score++;
-            callNextStage();
+            levelWinner = true;
         }
 
-        //checkWinner();
-        if(!haveWinner){
-            callNextStage();
+        if(levelWinner){
+            levelWinner = false;
+            checkGameWinner();
+            if (!gameWinner){
+                callNextStage();
+            }
         }
-   // }
+    }
 }
 
 function updateHud() {
-    hud.text1.text = 'PLAYER 1: '+ player.health
-    hud.text2.text = 'PLAYER 2: ' + player2.health
+    hud.text1.text = 'HEALTH: '+ player1.health
+    hud.text2.text = 'HEALTH: ' + player2.health
     hud.score1.text = 'MD3: '+player1Score;
     hud.score2.text = 'MD3: '+player2Score;
+    hud.speed1.text = 'SPEED: '+player1.velocity;
+    hud.speed2.text = 'SPEED: '+player2.velocity;
+    hud.fire1.text = 'DELAY: '+player1.fireDelay;
+    hud.fire2.text = 'DELAY: '+player2.fireDelay;
     if (hud.textLevel.visible == false){
         return;
     }
@@ -546,10 +631,10 @@ function updateHud() {
 }
 
 function render(){
-    game.debug.body(player);
+    /*game.debug.body(player);
     game.debug.body(player2);
     maps.forEach(function(obj){game.debug.body(obj)});
     milks.forEach(function(obj){game.debug.body(obj)});
     sugars.forEach(function(obj){game.debug.body(obj)});
-    yeasts.forEach(function(obj){game.debug.body(obj)});
+    yeasts.forEach(function(obj){game.debug.body(obj)});*/
 }
