@@ -28,8 +28,6 @@ var level = 1;
 var showLevelDelay = 180;
 var showLevelCount = 0;
 
-var restartGame;
-
 var player1;
 var player2;
 var cursors;
@@ -55,6 +53,12 @@ var milks;
 
 var winCount = 0;
 var winDelay = 300;
+
+var backgroundAudio;
+var audioCount = 1;
+var shotSound;
+var hitSound;
+var bufSound;
 
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
     'game-container',
@@ -207,6 +211,13 @@ function preload() {
     game.load.text('map1', 'assets/map1.txt');
     game.load.text('map2', 'assets/map2.txt');
     game.load.text('map3', 'assets/map3.txt');
+
+    game.load.audio('fundo1','assets/fundo1.mp3');
+    game.load.audio('fundo2','assets/fundo2.mp3');
+    game.load.audio('fundo3','assets/fundo3.mp3');
+    game.load.audio('shotSound','assets/shotSound.ogg');
+    game.load.audio('hitSound','assets/hitSound.mp3');
+    game.load.audio('bufSound','assets/bufSound.mp3');
 }
 
 function createPlayers(){
@@ -270,7 +281,14 @@ function create(){
     var fps = new FramesPerSecond(game, game.width/2, 50);
     game.add.existing(fps);
 
-    restartGame = Phaser.Keyboard.R;
+    backgroundAudio = game.add.audio('fundo'+audioCount);
+    audioCount++;
+    backgroundAudio.loop = true;
+    backgroundAudio.volume -= 0.8;
+    backgroundAudio.play();
+    shotSound = game.add.audio('shotSound');
+    hitSound = game.add.audio('hitSound');
+    bufSound = game.add.audio('bufSound');
 }
 
 function createDelayText(x, y, text) {
@@ -520,8 +538,11 @@ function callNextStage(){
         yeastDelay = 0;
         player1Score = 0;
         player2Score = 0;
+        audioCount = 1;
+        backgroundAudio.pause();
         game.state.restart();
     }else{
+        backgroundAudio.pause();
         game.state.restart();
         showLevelCount = 0;
         milkSpawnDelay = milkSpawnDelay-30;

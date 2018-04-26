@@ -7,7 +7,7 @@ class Player extends Phaser.Sprite {
         this.fireDelay = 180;
         this.fireCount = 180;
         this.velocity = 150;
-        this.health = 10;
+        this.health = 3;
         this.angleSpeed = 3;
         this.scale.setTo(0.1,0.1);
         this.anchor.setTo(0.5, 0.5)
@@ -42,6 +42,7 @@ class Player extends Phaser.Sprite {
     }
 
     damageTaken(damage){
+        hitSound.play();
         this.health = this.health-damage;
         this.resetPlayer();
     }
@@ -51,6 +52,7 @@ class Player extends Phaser.Sprite {
     }
 
     increasesSpeed(){
+        bufSound.play();
         if(this.playerVelocity == this.body.maxVelocity.x){
             this.velocity = this.body.maxVelocity.x;
         }else{
@@ -64,6 +66,7 @@ class Player extends Phaser.Sprite {
     }
 
     increasesFireDelay(){
+        bufSound.play();
         if (this.fireDelay == this.fireDelayMax){
             this.fireDelay = this.fireDelayMax;
         }else{
@@ -82,6 +85,7 @@ class Player extends Phaser.Sprite {
             var bullet = new Bullet(game, this.x, this.y, 'shot', this.pType);
             this.bullets.add(bullet);
             this.fireCount = 0;
+            shotSound.play();
         }
         else{
             return;
