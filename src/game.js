@@ -264,16 +264,18 @@ function create(){
     fullScreenButton.onDown.add(toggleFullScreen);
 
     hud = {
-        text1: createHealthText(game.width*1/9, 50, 'HEALTH: 20'),
-        text2: createHealthText(game.width*8/9, 50, 'HEALTH: 20'),
+        player1: createPlayerText(game.width*1/9, 40, 'PLAYER 1'),
+        player2: createPlayerText(game.width*8/9, 40, 'PLAYER 2'),
+        text1: createHealthText(game.width*1/9, 70, 'HEALTH: 20'),
+        text2: createHealthText(game.width*8/9, 70, 'HEALTH: 20'),
+        speed1: createSpeedText(game.width*1/9, 90, 'SPEED: '+player1.velocity),
+        speed2: createSpeedText(game.width*8/9, 90, 'SPEED: '+player2.velocity),
+        fire1: createDelayText(game.width*1/9, 110, 'DELAY: '+player1.fireDelay/60+'s'),
+        fire2: createDelayText(game.width*8/9, 110, 'DELAY: '+player2.fireDelay/60+'s'),
+        score1: createScoreText(game.width*1/9, 130, 'MD3: '+player1Score),
+        score2: createScoreText(game.width*8/9, 130, 'MD3: '+player2Score),
         winner1: createWinnerText(game.width/2, game.height/2, 'Player 1 WIN!'),
         winner2: createWinnerText(game.width/2, game.height/2, 'Player 2 WIN!'),
-        speed1: createSpeedText(game.width*1/9, 70, 'SPEED: '+player1.velocity),
-        speed2: createSpeedText(game.width*8/9, 70, 'SPEED: '+player2.velocity),
-        fire1: createDelayText(game.width*1/9, 90, 'DELAY: '+player1.fireDelay),
-        fire2: createDelayText(game.width*8/9, 90, 'DELAY: '+player2.fireDelay),
-        score1: createScoreText(game.width*1/9, 110, 'MD3: '+player1Score),
-        score2: createScoreText(game.width*8/9, 110, 'MD3: '+player2Score),
         textLevel: createLevelText()
     };
     updateHud();
@@ -291,18 +293,27 @@ function create(){
     bufSound = game.add.audio('bufSound');
 }
 
-function createDelayText(x, y, text) {
-    var style = {font: 'bold 16px Arial', fill: 'orange'}
+function createPlayerText(x, y, text) {
+    var style = {font: 'bold 20px Arial', fill: 'white'}
+    var text = game.add.text(x, y, text, style)
+    text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
+    text.stroke = '#000000';
+    text.strokeThickness = 2;
+    text.anchor.setTo(0.5, 0.5)
+    return text
+}
+
+function createHealthText(x, y, text) {
+    var style = {font: 'bold 20px Arial', fill: 'red'}
     var text = game.add.text(x, y, text, style)
     text.stroke = '#000000';
     text.strokeThickness = 2;
     text.anchor.setTo(0.5, 0.5)
-    text.visible = true;
     return text
 }
 
 function createSpeedText(x, y, text) {
-    var style = {font: 'bold 16px Arial', fill: 'grey'}
+    var style = {font: 'bold 20px Arial', fill: 'grey'}
     var text = game.add.text(x, y, text, style)
     text.stroke = '#111111';
     text.strokeThickness = 2;
@@ -311,28 +322,18 @@ function createSpeedText(x, y, text) {
     return text
 }
 
-function createWinnerText(x, y, text) {
-    var style = {font: 'bold 72px Arial', fill: 'white'}
+function createDelayText(x, y, text) {
+    var style = {font: 'bold 20px Arial', fill: 'orange'}
     var text = game.add.text(x, y, text, style)
     text.stroke = '#000000';
     text.strokeThickness = 2;
     text.anchor.setTo(0.5, 0.5)
-    text.visible = false;
-    return text
-}
-
-function createHealthText(x, y, text) {
-    var style = {font: 'bold 16px Arial', fill: 'red'}
-    var text = game.add.text(x, y, text, style)
-    //text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
-    text.stroke = '#000000';
-    text.strokeThickness = 2;
-    text.anchor.setTo(0.5, 0.5)
+    text.visible = true;
     return text
 }
 
 function createScoreText(x, y, text) {
-    var style = {font: 'bold 16px Arial', fill: 'yellow'}
+    var style = {font: 'bold 20px Arial', fill: 'yellow'}
     var text = game.add.text(x, y, text, style)
     //text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
     text.stroke = '#000000';
@@ -343,14 +344,23 @@ function createScoreText(x, y, text) {
 
 function createLevelText(x, y) {
     var levelNumber = 'Level '+level;
-    var style = {font: 'bold 48px Arial', fill: 'white'}
+    var style = {font: 'bold 52px Arial', fill: 'white'}
     var text = game.add.text(game.width/2, game.height/2, levelNumber, style)
-    //text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
     text.stroke = '#000000';
     text.strokeThickness = 2;
     text.anchor.setTo(0.5, 0.5)
     text.visible = true;
     level++;
+    return text
+}
+
+function createWinnerText(x, y, text) {
+    var style = {font: 'bold 72px Arial', fill: 'white'}
+    var text = game.add.text(x, y, text, style)
+    text.stroke = '#000000';
+    text.strokeThickness = 2;
+    text.anchor.setTo(0.5, 0.5)
+    text.visible = false;
     return text
 }
 
@@ -568,19 +578,9 @@ function callChampion(){
     } 
 }
 
-function moveBackground(){
-    //movendo o fundo dos level 2 e 3
-    if(backgroundCount == 3){
-        bg.tilePosition.x += 0.5;
-    }else if(backgroundCount == 4){
-        bg.tilePosition.x += 0.5;
-    }
-}
-
 function update(){
 
     if (gameWinner){
-        //moveBackground();
         checkDeadMilks();
         checkDeadSugars();
         checkDeadYeast();
@@ -596,7 +596,6 @@ function update(){
             winCount++;
         }
     }else{
-        //moveBackground();
         checkDeadMilks();
         checkDeadSugars();
         checkDeadYeast();
@@ -638,8 +637,8 @@ function updateHud() {
     hud.score2.text = 'MD3: '+player2Score;
     hud.speed1.text = 'SPEED: '+player1.velocity;
     hud.speed2.text = 'SPEED: '+player2.velocity;
-    hud.fire1.text = 'DELAY: '+player1.fireDelay;
-    hud.fire2.text = 'DELAY: '+player2.fireDelay;
+    hud.fire1.text = 'DELAY: '+player1.fireDelay/60+'s';
+    hud.fire2.text = 'DELAY: '+player2.fireDelay/60+'s';
     if (hud.textLevel.visible == false){
         return;
     }
